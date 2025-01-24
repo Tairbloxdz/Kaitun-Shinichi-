@@ -1,74 +1,52 @@
--- Tải UI Library (OrionLib)
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:FindFirstChildOfClass("Humanoid")
 
--- Tạo cửa sổ menu chính
-local Window = OrionLib:MakeWindow({
-    Name = "Kaitun Menu ✅",
-    HidePremium = false,
-    IntroText = "Welcome to Kaitun Menu! ✅",
-    SaveConfig = true,
-    ConfigFolder = "KaitunConfig"
-})
+local gui = player:WaitForChild("PlayerGui"):WaitForChild("StatusGui")
+local menuFrame = gui:WaitForChild("MenuFrame")  -- Frame chứa trạng thái
+local toggleButton = gui:WaitForChild("ToggleButton")  -- Nút bật/tắt
+local healthLabel = menuFrame:WaitForChild("HealthLabel")
+local energyLabel = menuFrame:WaitForChild("EnergyLabel")
 
--- Tạo tab chính
-local MainTab = Window:MakeTab({
-    Name = "📌 Main",
-    Icon = "rbxassetid://119153379176478",
-    PremiumOnly = false
-})
+-- Hình ảnh khi bật/tắt
+local closeImage = "rbxassetid://100882525032763"  -- Hình ảnh khi menu đóng
+local openImage = "rbxassetid://100882525032763"    -- Hình ảnh khi menu mở
+toggleButton.Image = closeImage  -- Đặt hình ảnh ban đầu
 
--- Tạo Label hiển thị Level
-local LevelLabel = MainTab:AddLabel("🔄 Đang tải Level...")
+-- Ẩn menu ban đầu
+menuFrame.Visible = false
+local isVisible = false
 
--- Hàm cập nhật Level
-local function UpdateLevel()
+-- Hàm cập nhật trạng thái
+local function updateStats()
     while true do
-        -- Kiểm tra nếu nhân vật tồn tại
-        if game.Players.LocalPlayer and game.Players.LocalPlayer.Character then
-            local playerStats = game.Players.LocalPlayer:FindFirstChild("Data")
-            if playerStats then
-                local level = playerStats:FindFirstChild("Level")
-                if level then
-                    LevelLabel:Set("📊 Level hiện tại: " .. level.Value)
-                end
-            end
+        if humanoid then
+            healthLabel.Text = "Health: " .. math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
         end
-        wait(5) -- Cập nhật mỗi 5 giây
+        
+        local energy = character:FindFirstChild("Energy")
+        if energy then
+            energyLabel.Text = "Energy: " .. energy.Value
+        end
+        
+        wait(1) -- Cập nhật mỗi giây
     end
 end
 
--- Chạy cập nhật Level trong một luồng riêng
-task.spawn(UpdateLevel)
-
--- Nút chạy script chính
-MainTab:AddButton({
-    Name = "🚀 Chạy Kaitun Script ✅",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Tairbloxdz/Kaitun-Shinichi/refs/heads/main/kaitun.lua"))()
+-- Hàm bật/tắt menu và thay đổi hình ảnh nút
+local function toggleMenu()
+    isVisible = not isVisible
+    menuFrame.Visible = isVisible
+    
+    if isVisible then
+        toggleButton.Image = openImage
+    else
+        toggleButton.Image = closeImage
     end
-})
+end
 
--- Nút Copy Link Discord
-MainTab:AddButton({
-    Name = "📋 Copy Link Discord ✅",
-    Callback = function()
-        setclipboard("https://discord.gg/TFmhmbGjEE") -- Copy link vào clipboard
-        OrionLib:MakeNotification({
-            Name = "✅ Thành công!",
-            Content = "Đã copy link Discord vào clipboard!",
-            Image = "rbxassetid://119153379176478",
-            Time = 5
-        })
-    end
-})
+-- Gắn sự kiện khi nhấn vào nút
+toggleButton.MouseButton1Click:Connect(toggleMenu)
 
--- Nút thoát UI
-MainTab:AddButton({
-    Name = "❌ Thoát Menu",
-    Callback = function()
-        OrionLib:Destroy()
-    end
-})
-
--- Hiển thị UI
-OrionLib:Init()
+-- Chạy cập nhật trạng thái
+updateStats()
